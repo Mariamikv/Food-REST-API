@@ -1,16 +1,21 @@
 package com.example.georgianfoodapi.controllers;
 
+import com.example.georgianfoodapi.exceptions.AuthorModelAssembler;
+import com.example.georgianfoodapi.exceptions.AuthorNotFoundException;
 import com.example.georgianfoodapi.models.Author;
-import com.example.georgianfoodapi.models.Response;
 import com.example.georgianfoodapi.service.implementation.AuthorServiceImpl;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.time.LocalDateTime;
-import java.util.Map;
+import java.util.List;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,57 +23,37 @@ import java.util.Map;
 public class AuthorController {
 
     private final AuthorServiceImpl authorService;
+    private final AuthorModelAssembler assembler;
 
     @GetMapping("/list")
-    public ResponseEntity<Response> getAuthors() {
-        return ResponseEntity.ok(
-                Response.builder()
-                        .timeStamp(LocalDateTime.now())
-                        .data(Map.of("Authors", authorService.list(10)))
-                        .message("Authors data retrieved")
-                        .status(HttpStatus.OK)
-                        .statusCode(HttpStatus.OK.value())
-                        .build()
-        );
+    public CollectionModel<EntityModel<Author>> all() {
+        List<EntityModel<Author>> authors = authorService.list(5).stream()
+                .map(assembler::toModel).toList();
+
+        return CollectionModel.of(authors, linkTo(methodOn(AuthorController.class).all()).withSelfRel());
     }
 
     @PostMapping("/save")
-    public ResponseEntity<Response> saveAuthor(@RequestBody @Valid Author author) {
-        return ResponseEntity.ok(
-                Response.builder()
-                .timeStamp(LocalDateTime.now())
-                .data(Map.of("authors", authorService.create(author)))
-                .message("New author created")
-                .status(HttpStatus.CREATED)
-                .statusCode(HttpStatus.CREATED.value())
-                .build()
-        );
+    ResponseEntity<?> saveAuthor(@RequestBody @Valid Author author) {
+        EntityModel<Author> authorEntityModel = assembler.toModel(authorService.create(author));
+
+        return ResponseEntity.created(
+                authorEntityModel.getRequiredLink(IanaLinkRelations.SELF).toUri()
+        ).body(authorEntityModel);
     }
 
     @GetMapping("get/{username}")
-    public ResponseEntity<Response> getAuthor(@PathVariable("username") String username) {
-        return ResponseEntity.ok(
-                Response.builder()
-                        .timeStamp(LocalDateTime.now())
-                        .data(Map.of("authors", authorService.get(username)))
-                        .message("server retrieved")
-                        .status(HttpStatus.OK)
-                        .statusCode(HttpStatus.OK.value())
-                        .build()
-        );
+    public EntityModel<Author> one(@PathVariable("username") String username) throws AuthorNotFoundException {
+        Author author = authorService.get(username);
+                //.orElseThrow(() -> new AuthorNotFoundException(username));
+
+        return assembler.toModel(author);
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Response> deleteAuthor(@PathVariable("id") Long id){
+    ResponseEntity<?> deleteAuthor(@PathVariable("id") Long id){
+        authorService.delete(id);
 
-        return ResponseEntity.ok(
-                Response.builder()
-                        .timeStamp(LocalDateTime.now())
-                        .data(Map.of("deleted", authorService.getById(id)))
-                        .message("author deleted")
-                        .status(HttpStatus.OK)
-                        .statusCode(HttpStatus.OK.value())
-                        .build()
-        );
+        return ResponseEntity.noContent().build();
     }
 }

@@ -1,16 +1,21 @@
 package com.example.georgianfoodapi.controllers;
 
+import com.example.georgianfoodapi.exceptions.IngredientModelAssembler;
 import com.example.georgianfoodapi.models.Ingredient;
-import com.example.georgianfoodapi.models.Response;
 import com.example.georgianfoodapi.service.implementation.IngredientServiceImpl;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.time.LocalDateTime;
-import java.util.Map;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,59 +23,37 @@ import java.util.Map;
 public class IngredientController {
 
     private final IngredientServiceImpl service;
+    private final IngredientModelAssembler assembler;
 
     @GetMapping("/list")
-    public ResponseEntity<Response> getService() {
-        return ResponseEntity.ok(
-                Response.builder()
-                        .timeStamp(LocalDateTime.now())
-                        .data(Map.of("ingredients", service.list(20)))
-                        .message("ingredients retrieved")
-                        .status(HttpStatus.OK)
-                        .statusCode(HttpStatus.OK.value())
-                        .build()
-        );
+    public CollectionModel<EntityModel<Ingredient>> all() {
+        List<EntityModel<Ingredient>> ingredient = service.list(10).stream()
+                .map(assembler::toModel)
+                .collect(Collectors.toList());
+
+        return CollectionModel.of(ingredient, linkTo(methodOn(IngredientController.class).all()).withSelfRel());
     }
 
     @PostMapping("/save")
-    public ResponseEntity<Response> saveServer(@RequestBody @Valid Ingredient ingredient) {
+    ResponseEntity<?> save(@RequestBody @Valid Ingredient ingredient) {
+        EntityModel<Ingredient> entityModel = assembler.toModel(service.create(ingredient));
 
-        return ResponseEntity.ok(
-                Response.builder()
-                        .timeStamp(LocalDateTime.now())
-                        .data(Map.of("ingredient", service.create(ingredient)))
-                        .message("ingredient created")
-                        .status(HttpStatus.CREATED)
-                        .statusCode(HttpStatus.CREATED.value())
-                        .build()
-        );
+        return ResponseEntity.created(
+                entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri()).body(entityModel);
     }
 
     @GetMapping("/get/{id}")
-    public ResponseEntity<Response> getServer(@PathVariable("id") Long id){
+    public EntityModel<Ingredient> one(@PathVariable("id") Long id){
+        Ingredient ingredient = service.get(id);
 
-        return ResponseEntity.ok(
-                Response.builder()
-                        .timeStamp(LocalDateTime.now())
-                        .data(Map.of("ingredient", service.get(id)))
-                        .message("ingredient retrieved")
-                        .status(HttpStatus.OK)
-                        .statusCode(HttpStatus.OK.value())
-                        .build()
-        );
+        return assembler.toModel(ingredient);
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Response> deleteServer(@PathVariable("id") Long id){
+    ResponseEntity<?> delete(@PathVariable("id") Long id){
+        service.delete(id);
 
-        return ResponseEntity.ok(
-                Response.builder()
-                        .timeStamp(LocalDateTime.now())
-                        .data(Map.of("deleted", service.get(id)))
-                        .message("ingredient deleted")
-                        .status(HttpStatus.OK)
-                        .statusCode(HttpStatus.OK.value())
-                        .build()
-        );
+        // returns an HTTP 204 No Content response.
+        return  ResponseEntity.noContent().build();
     }
 }

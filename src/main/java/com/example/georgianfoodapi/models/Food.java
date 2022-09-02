@@ -1,12 +1,8 @@
 package com.example.georgianfoodapi.models;
 
-import com.example.georgianfoodapi.utils.DishType;
-import com.example.georgianfoodapi.utils.MealType;
 import lombok.*;
 import javax.persistence.*;
-import java.io.Serializable;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Getter
@@ -27,14 +23,15 @@ public class Food {
     private String SmallDesc;
     private String LongDesc;
     @Column(name = "meal_type")
-    private MealType mealType;
+    private String mealType;
     @Column(name = "dish_type")
-    private DishType dishType;
+    private String dishType;
     @OneToMany(
             mappedBy = "food",
             fetch = FetchType.LAZY,
             cascade = CascadeType.ALL
     )
+    @ToString.Exclude
     private List<Ingredient> ingredient; // add link of ingredients object
     @Column(name = "how_to_cook")
     private String howToCook;

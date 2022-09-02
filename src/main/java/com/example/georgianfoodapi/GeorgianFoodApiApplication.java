@@ -25,4 +25,34 @@ public class GeorgianFoodApiApplication {
         SpringApplication.run(GeorgianFoodApiApplication.class, args);
     }
 
+    @Bean
+    CommandLineRunner run(AuthorRepository repository, IngredientRepository ingredientRepository, FoodRepository foodRepository) {
+
+        return args -> {
+          repository.save(new Author(
+                  1L,
+                  "Mariam",
+                  "Kvantaliani",
+                  "mariamikv",
+                  new ArrayList<>()
+          ));
+
+          foodRepository.save(new Food(
+                  1L,
+                  "food",
+                  "imageUrl",
+                  "smallDesc",
+                  "longDesc",
+                  MealType.BRANCH.getMealType(),
+                  DishType.BREAD.getDishType(),
+                  new ArrayList<>(),
+                  "how to",
+                  new Author(1L,
+                          "Mariam",
+                          "Kvantaliani",
+                          "mariamikv",
+                          new ArrayList<>())
+          ));
+        };
+    }
 }
