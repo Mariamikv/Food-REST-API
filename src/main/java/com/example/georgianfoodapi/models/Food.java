@@ -1,5 +1,7 @@
 package com.example.georgianfoodapi.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.*;
 import javax.persistence.*;
 import java.util.List;
@@ -32,16 +34,29 @@ public class Food {
             cascade = CascadeType.ALL
     )
     @ToString.Exclude
+    @JsonIgnore
     private List<Ingredient> ingredient; // add link of ingredients object
     @Column(name = "how_to_cook")
     private String howToCook;
     @ManyToOne(
-            cascade = CascadeType.ALL,
+            cascade = CascadeType.MERGE,
             fetch = FetchType.EAGER
     )
     @JoinColumn(
             name = "author_id",
             referencedColumnName = "authorId"
     )
+    @JsonIgnore
     private Author author;  // add link of author object
+
+    public Food(String title, String imageUrl, String smallDesc, String longDesc, String mealType, String dishType, String howToCook, Author author) {
+        this.title = title;
+        this.imageUrl = imageUrl;
+        SmallDesc = smallDesc;
+        LongDesc = longDesc;
+        this.mealType = mealType;
+        this.dishType = dishType;
+        this.howToCook = howToCook;
+        this.author = author;
+    }
 }

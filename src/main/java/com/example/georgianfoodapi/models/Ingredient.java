@@ -1,6 +1,8 @@
 package com.example.georgianfoodapi.models;
 
 import com.example.georgianfoodapi.utils.MeasureType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,7 +24,7 @@ public class Ingredient {
     private Long ingredientsId;
     private String title;
     private float quantity; //Quantity of specified measure
-    private MeasureType measureType;
+    private String measureType;
     private float weight;
 
     @ManyToOne(
@@ -33,6 +35,15 @@ public class Ingredient {
             name = "food_id",
             referencedColumnName = "foodId"
     )
+    @JsonIgnore
     private Food food;
+
+    public Ingredient(String title, float quantity, String measureType, float weight, Food food) {
+        this.title = title;
+        this.quantity = quantity;
+        this.measureType = measureType;
+        this.weight = weight;
+        this.food = food;
+    }
 }
 

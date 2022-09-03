@@ -6,6 +6,11 @@ import com.example.georgianfoodapi.models.Ingredient;
 import com.example.georgianfoodapi.repository.AuthorRepository;
 import com.example.georgianfoodapi.repository.FoodRepository;
 import com.example.georgianfoodapi.repository.IngredientRepository;
+import com.example.georgianfoodapi.service.AuthorService;
+import com.example.georgianfoodapi.service.IngredientService;
+import com.example.georgianfoodapi.service.implementation.AuthorServiceImpl;
+import com.example.georgianfoodapi.service.implementation.FoodServiceImpl;
+import com.example.georgianfoodapi.service.implementation.IngredientServiceImpl;
 import com.example.georgianfoodapi.utils.DishType;
 import com.example.georgianfoodapi.utils.MealType;
 import com.example.georgianfoodapi.utils.MeasureType;
@@ -26,33 +31,40 @@ public class GeorgianFoodApiApplication {
     }
 
     @Bean
-    CommandLineRunner run(AuthorRepository repository, IngredientRepository ingredientRepository, FoodRepository foodRepository) {
+    CommandLineRunner run(AuthorServiceImpl authorService, IngredientServiceImpl ingredientService, FoodServiceImpl foodService) {
 
         return args -> {
-          repository.save(new Author(
-                  1L,
-                  "Mariam",
-                  "Kvantaliani",
-                  "mariamikv",
-                  new ArrayList<>()
-          ));
 
-          foodRepository.save(new Food(
-                  1L,
-                  "food",
-                  "imageUrl",
-                  "smallDesc",
-                  "longDesc",
-                  MealType.BRANCH.getMealType(),
-                  DishType.BREAD.getDishType(),
-                  new ArrayList<>(),
-                  "how to",
-                  new Author(1L,
-                          "Mariam",
-                          "Kvantaliani",
-                          "mariamikv",
-                          new ArrayList<>())
-          ));
+            Author author = new Author(
+                    "Mariam",
+                    "Kvantaliani",
+                    "mariamikv"
+            );
+            authorService.create(author);
+
+            Food food = new Food(
+                    "title",
+                    "imageUrl",
+                    "smallDesc",
+                    "longDesc",
+                    MealType.LUNCH.getMealType(),
+                    DishType.DESSERTS.getDishType(),
+                    "how to cook",
+                    author
+            );
+
+            foodService.create(food);
+
+            Ingredient ingredient = new Ingredient(
+                    "title",
+                    23F,
+                    MeasureType.GRAM.getMeasureType(),
+                    12F,
+                    food
+            );
+
+            ingredientService.create(ingredient);
+
         };
     }
 }

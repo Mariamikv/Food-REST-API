@@ -1,5 +1,7 @@
 package com.example.georgianfoodapi.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,7 +29,14 @@ public class Author {
     @OneToMany(
             mappedBy = "author",
             fetch = FetchType.EAGER,
-            cascade = CascadeType.ALL
+            cascade = CascadeType.MERGE
     )
+    @JsonIgnore
     private List<Food> food;
+
+    public Author(String firstName, String lastName, String username) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.username = username;
+    }
 }
